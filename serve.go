@@ -15,32 +15,40 @@ type Bridge struct {
 func (b *Bridge) Serve(addr string) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/generate", func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			w.WriteHeader(400)
-			return
-		}
+		w.WriteHeader(func() int {
+			ctx := r.Context()
 
-		model := r.Form.Get("model")
-		prompt := r.Form.Get("prompt")
-
-		if model != "" && prompt != "" {
-			c := make(chan string, 1)
-			if b.Instance.Generate(model, prompt, c) != nil {
-				goto FAIL
+			err := r.ParseForm()
+			if err != nil {
+				return 400
 			}
 
+			form, err := FormRequire(r.Form, "model", "prompt")
+			if err != nil {
+				return 400
+			}
+
+			println("Prompt:", form["prompt"])
+
+			result := make(chan string, 1)
+
+			if err := b.Instance.Generate(ctx, form["model"], form["prompt"], result); err != nil {
+				println(err.Error())
+				return 400
+			}
+
+			println("OK")
+
 			select {
-			case result := <-c:
+			case result := <-result:
+				println(result)
 				if _, err := w.Write([]byte(result)); err != nil {
-					goto FAIL
+					return 500
 				}
 			}
 
-			return
-		}
-	FAIL:
-		w.WriteHeader(400)
+			return 200
+		}())
 	})
 
 	return http.ListenAndServe(addr, mux)

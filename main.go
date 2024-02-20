@@ -7,6 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -18,10 +19,18 @@ func main() {
 }
 
 func _main() error {
-	instanceAddr := flag.String("s", "http://127.0.0.1:11434", "O-LLaMA instance URI.")
+	llamaHost := os.Getenv("OLLAMA_HOST")
+	if llamaHost == "" {
+		flag.StringVar(&llamaHost, "i", "http://127.0.0.1:11434", "O-LLaMA server address.")
+	}
+
 	port := flag.String("p", "11444", "Bridge port")
 
-	b := Bridge{Instance: &Instance{*instanceAddr}}
+	flag.Parse()
+
+	println("OLLAMA_HOST:", llamaHost)
+
+	b := Bridge{Instance: &Instance{llamaHost}}
 
 	err := b.Serve(":" + *port)
 	if err != nil {

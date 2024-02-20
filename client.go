@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -35,7 +36,11 @@ type Instance struct {
 	URL string
 }
 
-func (i *Instance) Generate(model string, prompt string, C chan<- string) error {
+type Operation struct {
+	Closer io.Closer
+}
+
+func (i *Instance) Generate(ctx context.Context, model string, prompt string, result chan<- string) error {
 	s, err := json.Marshal(GenerationReq{
 		Model:  model,
 		Prompt: prompt,
@@ -45,11 +50,15 @@ func (i *Instance) Generate(model string, prompt string, C chan<- string) error 
 		return err
 	}
 
-	resp, err := http.Post(i.URL+"/api/generate", "application/json", bytes.NewBuffer(s))
+	req, err := http.NewRequestWithContext(ctx, "POST", i.URL+"/api/generate", bytes.NewBuffer(s))
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return err
+	}
 
 	b := bytes.NewBuffer(nil)
 	_, err = io.Copy(b, resp.Body)
@@ -64,7 +73,7 @@ func (i *Instance) Generate(model string, prompt string, C chan<- string) error 
 		return err
 	}
 
-	C <- r.Response
+	result <- r.Response
 
 	return nil
 }
