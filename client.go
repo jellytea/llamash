@@ -40,40 +40,38 @@ type Operation struct {
 	Closer io.Closer
 }
 
-func (i *Instance) Generate(ctx context.Context, model string, prompt string, result chan<- string) error {
+func (i *Instance) Generate(ctx context.Context, model string, prompt string) (string, error) {
 	s, err := json.Marshal(GenerationReq{
 		Model:  model,
 		Prompt: prompt,
 		Stream: false,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", i.URL+"/api/generate", bytes.NewBuffer(s))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	b := bytes.NewBuffer(nil)
 	_, err = io.Copy(b, resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var r Response
 
 	err = json.Unmarshal(b.Bytes(), &r)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	result <- r.Response
-
-	return nil
+	return r.Response, nil
 }

@@ -5,6 +5,7 @@
 package main
 
 import (
+	"github.com/jellytea/go-httpform"
 	"net/http"
 )
 
@@ -18,34 +19,25 @@ func (b *Bridge) Serve(addr string) error {
 		w.WriteHeader(func() int {
 			ctx := r.Context()
 
-			err := r.ParseForm()
+			form, err := httpform.WrapFromRequest(r)
 			if err != nil {
 				return 400
 			}
 
-			form, err := FormRequire(r.Form, "model", "prompt")
+			model := form.String("model")
+			prompt := form.String("prompt")
+
+			err = form.Parse()
 			if err != nil {
-				return 400
+				return 500
 			}
 
-			println("Prompt:", form["prompt"])
-
-			result := make(chan string, 1)
-
-			if err := b.Instance.Generate(ctx, form["model"], form["prompt"], result); err != nil {
-				println(err.Error())
-				return 400
+			resp, err := b.Instance.Generate(ctx, *model, *prompt)
+			if err != nil {
+				return 500
 			}
 
-			println("OK")
-
-			select {
-			case result := <-result:
-				println(result)
-				if _, err := w.Write([]byte(result)); err != nil {
-					return 500
-				}
-			}
+			_, _ = w.Write([]byte(resp))
 
 			return 200
 		}())

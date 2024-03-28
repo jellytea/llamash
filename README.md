@@ -1,5 +1,5 @@
 # llamash
-Shell and REST API Bridge for O-LLaMA.
+RESTful API Bridge for [Ollama](https://ollama.com).
 
 ### Build and Run
 ```shell
@@ -8,8 +8,7 @@ $ ./llamash
 ```
 
 ### Setup
-Before starting the bridge server, you have to start O-LLaMA server.
-The address is ```http://127.0.0.1:11434``` in default.
+Before starting the bridge server, you need a running Ollama server which the address is ```http://127.0.0.1:11434``` in default.
 ```shell
 $ ollama serve &
 $ ./llamash -p 11444 -i 'http://127.0.0.1:11434'
