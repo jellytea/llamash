@@ -19,9 +19,10 @@ func main() {
 }
 
 func _main() error {
-	llamaHost := flag.String("i", "http://127.0.0.1:11434", "Ollama server address.")
-
-	port := flag.String("p", "11444", "Bridge port")
+	var (
+		llamaHost = flag.String("i", "http://127.0.0.1:11434", "Ollama server address.")
+		port      = flag.String("p", "11444", "Bridge port")
+	)
 
 	flag.Parse()
 

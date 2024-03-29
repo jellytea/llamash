@@ -5,7 +5,7 @@
 package main
 
 import (
-	"github.com/jellytea/go-httpform"
+	"github.com/jellyterra/go-httpform"
 	"net/http"
 )
 
