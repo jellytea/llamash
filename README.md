@@ -10,7 +10,7 @@ $ ./llamash
 ### Setup
 Before starting the bridge server, you need a running Ollama server which the address is ```http://127.0.0.1:11434``` in default.
 ```shell
-$ ollama serve &
+$ podman run --network host ollama serve
 $ ./llamash -p 11444 -i 'http://127.0.0.1:11434'
 ```
 
